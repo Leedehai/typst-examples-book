@@ -22,18 +22,6 @@ provides a full set of demonstrations of how the package could be helpful.
 
 Function `dd(*args, **kwargs)` excels at typesetting multi-variable
 differentials.
-- positional arguments:
-    - the variable names,
-    - optionally followed by a universal order number e.g. `2`, `n`, or an array
-    of individually-applied order numbers e.g. `[2,3]`, `[m n, lambda+1]`. If
-    the order number is missing or fewer than needed, the number defaults to
-    one.
-- optional named arguments:
-    - `d`: the differential symbol [default: upright `d`].
-    - `p`: the product symbol connecting the components [default: none].
-    - `compact`: only effective if `p` is none. If `#true`, it will remove the
-    TeXBook-advised thin spaces between the d-units inside the multi-variable
-    differential.
 
 ```typ
 #import "@preview/physica:0.9.1": dd, vb
@@ -44,9 +32,11 @@ differentials.
 
 [$ dd(f) quad dd(f,2) quad dd(x,y,2) quad dd(vb(x),t,[3,]) $], // (1)
 
-// The order number is one by default, if it's missing or fewer than variables.
+// A standalone order number applies to all variables; an array applies members
+// to each variable individually. If the order number missing or fewer than
+// needed, it's assumed to be 1.
 [$ dd(x,y) quad dd(x,y,2)quad dd(x,y, [2,]) \
-    dd(x,y, [2,3]) quad dd(x,y,z, [2,3]) $], // (2)
+   dd(x,y, [2,3]) quad dd(x,y,z, [2,3]) $], // (2)
 
 // Like Typst's "dif", there is a thin space between the function and the
 // differential symbol, as advised by the TeXBook.
@@ -60,7 +50,7 @@ differentials.
 dd(x, d:d) quad dd(x,y, d:delta) quad dd(x,y, 2, d:Delta) quad dd(x,y, d:upright(D))
 $], // (5)
 
-// Joining the d-units with, say the exterior product symbol.
+// Joining the d-units with, say the exterior product symbol, by argument "p".
 [$ dd(x,y,z, p:and) $], // (6)
 )
 ```
@@ -77,16 +67,6 @@ $ var(f), var(x, y), difference(f), difference(x, y) $
 
 Function `dv(f, *args, **kwargs)` helps you assemble ordinary derivatives with
 ease.
-- `f`: the function, which can be omitted,
-- positional `*args`:
-    - the variable name,
-    - optionally followed by an order number e.g. `2` [default: `1`].
-- named `**kwargs`(all optional):
-    - `d`: the differential symbol [default: upright `d`].
-    - `s`: the "slash" separating the numerator and denominator
-    [default: `#none`], by default it produces the normal fraction form. The
-    most common non-default is a slash, so as to create a flat form that fits
-    inline.
 
 ```typ
 #import "@preview/physica:0.9.1": dv, vb
@@ -95,13 +75,15 @@ ease.
 #table(
   columns: (auto, auto), align: horizon, stroke: none,
 
+  // The function name can be ommitted. If the order number missing,
+  // it's assumed to be 1.
   [$ dv(,x), dv(,x, 2), dv(f,x, k+1) $], // (1)
   [$ dv(,vb(r)), dv((f+g),vb(r)_e, 2) $], // (2)
 
   // Changing the "d" symbol.
   [$ dv(,x, d:delta), dv(,x, 2, d:Delta), dv(vb(u),t, 2, d: upright(D)) $], // (3)
 
-  // Use "s" to render a slash.
+  // Use "s" to designate a separator, e.g. a slash.
   [$ dv(f,x,k, s:slash) $], // (4)
 )
 ```
@@ -111,19 +93,6 @@ ease.
 Partial derivatives `pdv(f, *args, **kwargs)` can handle mixed orders. It
 attempts to compute the total order based on partial orders specified by the
 user.
-- `f`: the function, which can be #none or omitted,
-- positional `*args`:
-    - the variable names,
-    - optionally followed by a universal order number e.g. `2`, or an array of individually-applied order numbers e.g. `[2,3]`, `[m n, lambda+1]`. If the
-    order number is missing or fewer than needed, the number defaults to one.
-- named `**kwargs` (all optional):
-    - `s`: the "slash" separating the numerator and denominator
-    [default: `#none`], by default it produces the normal fraction form. The
-    most common non-default is a slash, so as to create a flat form that fits
-    inline.
-    - `total`: the user-specified total order that appears at the top. If
-    absent, physica will try computing the total number for you. You may
-    override it with `total` if necessary.
 
 ```typ
 #import "@preview/physica:0.9.1": pdv, vb
@@ -132,27 +101,21 @@ user.
 #table(
   columns: (auto, auto, auto), align: horizon, stroke: none,
 
-  [$ pdv(,x), pdv(,t, 2), pdv(,xi,[k]) $], // (1)
+  // The function name can be ommitted. A standalone order number applies to
+  // all variables; an array applies members to each variable individually.
+  // If the order number missing or fewer than needed, it's assumed to be 1.
+  [$ pdv(,x), pdv(,t, 2), pdv(f,x,y,[k,2]) $], // (1)
   [$ pdv(f,vb(r)), pdv(phi,vb(r)_e, 2) $], // (2)
 
   // The total order is automatically calculated.
-  [$ pdv(,x,y), pdv(f,x,y, 2) $], // (3)
+  [$ pdv(,x,y), pdv(,x,y, [1+k,1]) $], // (3)
 
-  // The order number is one by default, if it's missing or fewer than variables.
-  [$ pdv(,x,y, [2,]), pdv(,x,y, [1,2]) $], // (4)
+  // Use "s" to designate a separator, e.g. a slash.
+  [$ pdv(f,x,y, s:slash) $], // (4)
 
-  // If the variable has a superscript, wrap it in (...) to avoid confusion
-  // with the order number.
-  [$ pdv(f,(x^1),(x^2), 2) $], // (5)
-
-  // Use "s" to render a slash.
-  [$ pdv(f,x,y, s:slash) $], // (6)
-
-  // The monotonic adder can handle symbols with best effort.
-  [$ pdv(,x,y,z,t, [1, xi, 2, eta+2]) $], // (7)
-
-  // Override the automatic addition with "total".
-  [$ pdv(,x,y,z, [xi n, n-1], total:(xi+1)n) $], // (8)
+  // Override the automatic addition result with argument "total".
+  [$ pdv(,x,y,z,t, [1, xi, 2, eta+2]) $], // (5)
+  [$ pdv(,x,y,z,t, [1, xi, 2, eta+2], total: 5+eta+xi) $], // (6)
 )
 ```
 
@@ -163,26 +126,21 @@ In addition to Typst's built-in `vec()` for column vectors, physica provides
 `vu()`, `va()` to typset vectors.
 
 ```typ
+#set math.equation(numbering: "(1)")
+
 #import "@preview/physica:0.9.1": vecrow, vb, vu, va
+$
+vecrow(alpha, b) quad vb(a) vb(mu_1) quad vu(a) vu(mu_1) quad va(a) va(mu_1)
+$ // (1)
 
-$ vecrow(alpha, b) quad vb(a), vb(mu_1) quad vu(a), vu(mu_1) quad va(a), va(mu_1) $
-```
-
-Operators in vector fields: gradient `grad`, divergence `div`, curl `curl`, and
-Laplacian `laplacian`.
-
-```typ
 #import "@preview/physica:0.9.1": grad, div, curl, laplacian, vb
+$
+grad phi quad div vb(E) quad curl vb(B) quad
+diaer(u) = c^2 laplacian u =: c^2 laplace u
+$ // (2)
 
-$ grad phi, div vb(E), curl vb(B), diaer(u) = c^2 laplacian u =: c^2 laplace u $
-```
-
-Dot product `dprod`, cross product `cprod`, and inner product `iprod`.
-
-```typ
 #import "@preview/physica:0.9.1": dprod, cprod, iprod
-
-$ a dprod b, a cprod b, a iprod b $
+$ a dprod b, a cprod b, a iprod b $ // (3)
 ```
 
 ### Matrices
@@ -202,19 +160,15 @@ det mat(a, b; c, d) := mdet(a, b; c, d)
 $
 ```
 
-Diagonal matrix `dmat(...)` and antidiagonal matrix `admat(...)`.
+Diagonal matrix `dmat(...)`, antidiagonal matrix `admat(...)`,
+identity matrix `imat(n)`, and zero matrix `zmat(n)`.
 ```typ
-#import "@preview/physica:0.9.1": dmat, admat
+#import "@preview/physica:0.9.1": dmat, admat, imat, zmat
 
 $ dmat(1, 2) dmat(1, a_1, xi, delim:"[", fill:0) quad
-  admat(1, 2) admat(1, a_1, xi, fill:dot) $
-```
-
-Identity matrix `imat(n)` and zero matrix `zmat(n)`.
-```typ
-#import "@preview/physica:0.9.1": imat, zmat
-
-$ imat(2) imat(3,delim:"[",fill:*) quad zmat(2) zmat(3,delim:"[") $
+  admat(1, 2) admat(1, a_1, xi, fill:dot) quad
+  imat(2) imat(3,delim:"[",fill:*) quad
+  zmat(2) zmat(3,delim:"[") $
 ```
 
 Jacobian matrix with `jmat(func; ...)` or the longer name `jacobianmatrix`.
@@ -240,14 +194,8 @@ and returns an equation snippet `$...$`.
 ```
 #import "@preview/physica:0.9.1": xmat
 $
-// Define a function and pass it to xmat(...)
-#let element = (i,j) => $g^(#(i - 1)#(j - 1))$
-xmat(2, 2, #element)
-
-// Or just pass in an anonymous function closure.
-xmat(2, 3, #(r, c) => {
-  $"exp"(#r, #c) = #calc.pow(r, c)$
-}, delim:"[")
+#let elem-ij = (i,j) => $g^(#(i - 1)#(j - 1)) => #calc.pow(i,j)$
+xmat(2, 2, #elem-ij) xmat(2, 3, #elem-ij, delim:"[")
 $
 ```
 
@@ -257,15 +205,12 @@ Physica provides `bra`, `ket`, `braket`, `ketbra`, and `mel`.
 
 ```typ
 #import "@preview/physica:0.9.1": bra, ket, braket, ketbra, mel
-#set math.equation(numbering: "(1)")
 
-$ bra(u) quad ket(v) \
-  braket(u) quad braket(u, v) quad ketbra(u) quad ketbra(u, v) \
-  mel(psi, A, phi) =^"def" bra(psi)(A ket(phi)) = (bra(psi)A)ket(phi) $ // (1)
-
-// The brakets are automatically scaled up.
-$ braket(sum_(i=0)^n phi_n, psi)
-  mel(phi_n^0, sqrt(h / (pi m omega))(a^dagger + a), phi_n^0) $ // (2)
+$
+bra(u) quad ket(v) quad
+braket(u) quad braket(u, v) quad ketbra(u) quad ketbra(u, v) \
+mel(psi, hat(A), phi) =^"def" bra(psi)(hat(A) ket(phi)) = (bra(psi)hat(A))ket(phi)
+$
 ```
 
 Note: writing brakets used to be very complex, and physica encapsulates some
@@ -324,21 +269,18 @@ defines several other braces frequently used in scientific writing.
 #table(
   columns: (auto, auto), align: horizon, stroke: none,
 
-  // Absolute and norm values (Typst built-in)
-  [$ abs(phi), abs(phi/2), norm(phi), norm(phi/2) $], // (1)
-
   // The big-O notation.
-  [$ order(x^2), order(sum_(i=0)^oo f_i (x)) $], // (2)
+  [$ order(x^2), order(sum_(i=0)^oo f_i (x)) $], // (1)
 
   // Set builder.
   // It is not a all-lowercase word "set" to avoid colliding with a Typst keyword.
-  [$ Set(a_n), Set(m/(sum_i a_i), m > 0 \, m != 1) $], // (3)
+  [$ Set(a_n), Set(m/(sum_i a_i), m > 0 \, m != 1) $], // (2)
 
   // Evaluation boundary, a.k.a. restriction.
-  [$ eval(f(tau))_0^t, eval(f(x)/g(x))_(x=0) $], // (4)
+  [$ eval(f(tau))_0^t, eval(f(x)/g(x))_(x=0) $], // (3)
 
   // Expectation value.
-  [$ expval(u), expval(f/N) $], // (5)
+  [$ expval(u), expval(f/N) $], // (4)
 )
 ```
 
